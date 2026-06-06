@@ -1,11 +1,12 @@
 mads 2.1.5 build 3 (21 Feb 22)
 Source: addTwo.asm
      1
-     2 = 001A			number1 = 26
-     3 = 0037			number2 = 55
-     4 = 008D			addResult = $8D
-     5
-     6 				        icl 'equates.asm'
+     2 				; $ prefix means hex, % prefix means binary, no prefix means decimal.
+     3 = 001A			number1 = 26
+     4 = 0037			number2 = 55
+     5 				;addResult = $8D
+     6
+     7 				        icl 'equates.asm'
 Source: equates.asm
      1 				; printing variables and constants
      2 = 0346			putchar_ptr = $346                      ; CONSTANT: putchar_ptr = $346 (OS character output vector address)
@@ -77,7 +78,7 @@ Source: equates.asm
     68 				                    ; OS ANDs all colors with this value
     69 				                    ; $FE strips hue leaving only luminance (grey/blue)
     70 				                    ; $FF = full color (no masking) — what we want
-     7 				        icl 'routines.asm'
+     8 				        icl 'routines.asm'
 Source: routines.asm
      1 				; routines.asm
      2 				        org $3000               ; routines live at $3000
@@ -283,53 +284,79 @@ Source: routines.asm
    202 309E 53 3A 9B		scrname .byte 'S:',$9B             ; device name string for CIO OPEN
    203 				                                    ; 'S:' = screen device
    204 				                                    ; $9B  = ATASCII end-of-line terminator
-     8
-     9 30A1			        org $2000
-    10
-    11 2000			        .proc main
-    12 				    
-    13 				        ;=============================================================
-    14 				        ; print a string example
-    15 				        ;
-    16 2000-203B> A9 01 8D F0 +         mva #1 csrhinh                  ; hide the cursor
-    17 2005 A9 06 85 54		        mva #6 rowcrs                   ; set output row
-    18 2009 A9 0A 85 55		        mva #10 colcrs                  ; set output column
-    19 				        
-    20 200D A9 34 85 8B		        mva #<string1 strptr_lo         ; low byte of string1 address
-    21 2011 A9 20 85 8C		        mva #>string1 strptr_hi         ; high byte o f string1 address
-    22 2015 20 00 30		        jsr print_string                ; print the string
-    23
-    24 				        ; add two numbers
-    25 2018 A9 1A		        lda #number1        ; A = literal value in number1
-    26 201A 18			        clc                 ; clear the carry
-    27 201B 69 37		        adc #number2        ; A = A + liter value in number 2
-    28 201D 85 8D		        sta addResult       ; memory[addResult] = A
-    29
-    30 				        ;print both digits, from left to right 
-    31 				        ;first digit, shift right four times to move the first digit to the second digit's place
-    32 201F 4A			        lsr 
-    33 2020 4A			        lsr
-    34 2021 4A			        lsr
-    35 2022 4A			        lsr 
-    36 2023 69 30		        adc #offset_to_char   
-    37 2025 20 19 30		        jsr putchar
-    38
-    39 2028 A5 8D		        lda addResult       ; A = result from above
-    40 202A 29 0F		        and #%00001111      ; mask bottom 4 bits to obtain just the right digit
-    41 202C 69 30		        adc #offset_to_char
-    42 202E 20 19 30		        jsr putchar
-    43
-    44 2031 4C 16 30		        jmp stop                        ; stop is inside routines.asm
-    45 				        ;=============================================================
-    46
-    47 				                .endp
-    48
-    49 				;===================================================================
-    50 				; Data section
-    51 				;===================================================================
-    52 2034			        .local string1
-    53 2034 52 45 53 55 4C 54 +         .byte 'RESULT=',0
-    54 				        .endl
-    55
-    56
-    57 02E0-02E1> 00 20		        run main
+     9
+    10 30A1			        org $2000
+    11
+    12 2000			        .proc main
+    13 				    
+    14 				        ;=============================================================
+    15 				        ; print a string example
+    16 				        ;
+    17 2000-2042> A9 01 8D F0 +         mva #1 csrhinh                  ; hide the cursor
+    18 2005 A9 06 85 54		        mva #6 rowcrs                   ; set output row
+    19 2009 A9 0A 85 55		        mva #10 colcrs                  ; set output column
+    20 				        
+    21 200D A9 3B 85 8B		        mva #<string1 strptr_lo         ; low byte of string1 address
+    22 2011 A9 20 85 8C		        mva #>string1 strptr_hi         ; high byte o f string1 address
+    23 2015 20 00 30		        jsr print_string                ; print the string
+    24
+    25 				        ; add two numbers
+    26 2018 A9 1A		        lda #number1        ; A = literal value in number1
+    27 201A 18			        clc                 ; clear the carry
+    28 201B 69 37		        adc #number2        ; A = A + liter value in number 2
+    29 				        ;sta addResult       ; memory[addResult] = A
+    30
+    31 				        ;print both digits in HEX, from left to right 
+    32 				        ;first digit, shift right four times to move the first digit to the second digit's place
+    33 				        ;lsr 
+    34 				        ;lsr
+    35 				        ;lsr
+    36 				        ;lsr 
+    37 				        ;adc #offset_to_char   
+    38 				        ;jsr putchar
+    39
+    40 				        ;lda addResult       ; A = result from above
+    41 				        ;and #%00001111      ; mask bottom 4 bits to obtain just the right digit
+    42 				        ;adc #offset_to_char
+    43 				        ;jsr putchar
+    44
+    45 				        ; print both digits in base 10, from left to right
+    46 				        ; strategy is to continue subracting 10 from our hex value until it is less than 10
+    47 				        ; once we are there we now have the "tens digit" in X and the "ones digit" in A
+    48 201D A2 00		        ldx #0
+    49 201F			checkCount:
+    50 				        ; if A < 10   → carry = 0  → bcc branches   (carry CLEAR)
+    51 				        ; if A >= 10  → carry = 1  → bcs branches   (carry SET)
+    52 201F C9 0A		        cmp #10
+    53 2021 90 06		        bcc done        
+    54 2023 38			        sec                 ; set carry
+    55 2024 E9 0A		        sbc #10             ; A = A - 10
+    56 2026 E8			        inx                 ; X = X + 1
+    57 2027 D0 F6		        bne checkCount
+    58
+    59 2029			done:   
+    60 2029 48			        pha                 ; push(A) (push A onto the stack)
+    61 202A 8A			        txa                 ; A = X
+    62 202B 18			        clc
+    63 202C 69 30		        adc #offset_to_char
+    64 202E 20 19 30		        jsr putchar
+    65
+    66 2031 68			        pla                 ; A = pop() (pop the next value off the stack)
+    67 2032 18			        clc 
+    68 2033 69 30		        adc #offset_to_char
+    69 2035 20 19 30		        jsr putchar
+    70
+    71 2038 4C 16 30		        jmp stop                        ; stop is inside routines.asm
+    72 				        ;=============================================================
+    73
+    74 				                .endp
+    75
+    76 				;===================================================================
+    77 				; Data section
+    78 				;===================================================================
+    79 203B			        .local string1
+    80 203B 52 45 53 55 4C 54 +         .byte 'RESULT=',0
+    81 				        .endl
+    82
+    83
+    84 02E0-02E1> 00 20		        run main
