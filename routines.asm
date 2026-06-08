@@ -1,6 +1,23 @@
 ; routines.asm
         org $3000               ; routines live at $3000
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ; print a string
 ; Assumptions
 ; strptr_lo = low address of the string
@@ -77,7 +94,7 @@ checkCount:
         sec                 ; set carry
         sbc #10             ; A = A - 10
         inx                 ; X = X + 1
-        bne checkCount
+        jmp checkCount
 
 doneCounting:   
         pha                 ; push(A) (push A onto the stack)

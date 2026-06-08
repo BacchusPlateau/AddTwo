@@ -20,6 +20,11 @@ save_hi     = $88       ; saved plotY × 8 high byte
 bitpos      = $89       ; bit position within byte (plotX mod 8) that our pixel lives in
 bitmask     = $8A       ; save our mask that we will use to turn ONLY our pixel on
 
+; GR.8 color registers
+COLPF1  = $02C5     ; foreground pixel color shadow
+COLPF2  = $02C6     ; background color shadow
+COLBK   = $02C8     ; border color shadow
+
 ; string temp variables
 strptr_lo   = $8B                       ; low byte of string address
 strptr_hi   = $8C                       ; high byte of string address
