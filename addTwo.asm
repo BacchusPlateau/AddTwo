@@ -2,7 +2,7 @@
 ; $ prefix means hex, % prefix means binary, no prefix means decimal.
 number1 = 26
 number2 = 55
-;addResult = $8D
+addResult = $8D
 
         icl 'equates.asm'
         icl 'routines.asm'
@@ -26,7 +26,7 @@ number2 = 55
         lda #number1        ; A = literal value in number1
         clc                 ; clear the carry
         adc #number2        ; A = A + liter value in number 2
-        ;sta addResult       ; memory[addResult] = A
+        sta addResult       ; memory[addResult] = A
 
         ;print both digits in HEX, from left to right 
         ;first digit, shift right four times to move the first digit to the second digit's place
@@ -47,6 +47,12 @@ number2 = 55
         ; once we are there we now have the "tens digit" in X and the "ones digit" in A
         
         jsr printDecimal
+
+        ; clean up the startup cursor artifact at (0,0)
+        mva #0  rowcrs
+        mva #0  colcrs
+        lda #$20
+        jsr putchar
 
         jmp stop                        ; stop is inside routines.asm
         ;=============================================================

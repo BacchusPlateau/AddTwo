@@ -4,7 +4,7 @@ Source: addTwo.asm
      2 				; $ prefix means hex, % prefix means binary, no prefix means decimal.
      3 = 001A			number1 = 26
      4 = 0037			number2 = 55
-     5 				;addResult = $8D
+     5 = 008D			addResult = $8D
      6
      7 				        icl 'equates.asm'
 Source: equates.asm
@@ -345,11 +345,11 @@ Source: routines.asm
     14 				        ;=============================================================
     15 				        ; print a string example
     16 				        ;
-    17 2000-202A> A9 01 8D F0 +         mva #1 csrhinh                  ; hide the cursor
+    17 2000-2039> A9 01 8D F0 +         mva #1 csrhinh                  ; hide the cursor
     18 2005 A9 06 85 54		        mva #6 rowcrs                   ; set output row
     19 2009 A9 0A 85 55		        mva #10 colcrs                  ; set output column
     20 				        
-    21 200D A9 23 85 8B		        mva #<string1 strptr_lo         ; low byte of string1 address
+    21 200D A9 32 85 8B		        mva #<string1 strptr_lo         ; low byte of string1 address
     22 2011 A9 20 85 8C		        mva #>string1 strptr_hi         ; high byte o f string1 address
     23 2015 20 00 30		        jsr print_string                ; print the string
     24
@@ -357,7 +357,7 @@ Source: routines.asm
     26 2018 A9 1A		        lda #number1        ; A = literal value in number1
     27 201A 18			        clc                 ; clear the carry
     28 201B 69 37		        adc #number2        ; A = A + liter value in number 2
-    29 				        ;sta addResult       ; memory[addResult] = A
+    29 201D 85 8D		        sta addResult       ; memory[addResult] = A
     30
     31 				        ;print both digits in HEX, from left to right 
     32 				        ;first digit, shift right four times to move the first digit to the second digit's place
@@ -377,19 +377,25 @@ Source: routines.asm
     46 				        ; strategy is to continue subracting 10 from our hex value until it is less than 10
     47 				        ; once we are there we now have the "tens digit" in X and the "ones digit" in A
     48 				        
-    49 201D 20 24 30		        jsr printDecimal
+    49 201F 20 24 30		        jsr printDecimal
     50
-    51 2020 4C 16 30		        jmp stop                        ; stop is inside routines.asm
-    52 				        ;=============================================================
-    53
-    54 				                .endp
-    55
-    56 				;===================================================================
-    57 				; Data section
-    58 				;===================================================================
-    59 2023			        .local string1
-    60 2023 52 45 53 55 4C 54 +         .byte 'RESULT=',0
-    61 				        .endl
-    62
-    63
-    64 02E0-02E1> 00 20		        run main
+    51 				        ; clean up the startup cursor artifact at (0,0)
+    52 2022 A9 00 85 54		        mva #0  rowcrs
+    53 2026 A9 00 85 55		        mva #0  colcrs
+    54 202A A9 20		        lda #$20
+    55 202C 20 19 30		        jsr putchar
+    56
+    57 202F 4C 16 30		        jmp stop                        ; stop is inside routines.asm
+    58 				        ;=============================================================
+    59
+    60 				                .endp
+    61
+    62 				;===================================================================
+    63 				; Data section
+    64 				;===================================================================
+    65 2032			        .local string1
+    66 2032 52 45 53 55 4C 54 +         .byte 'RESULT=',0
+    67 				        .endl
+    68
+    69
+    70 02E0-02E1> 00 20		        run main
